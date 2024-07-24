@@ -10,11 +10,12 @@ char* Add(const char* buf1, const char* buf2);
 int check_digit(const char* buf);
 void removeLeadingZeros(char* str);
 
+/*뺄셈 수행 함수*/
 char* Sub(const char* buf1, const char* buf2)
 {
 	char* res = 0;
 	int	len1 = 0, len2 = 0, raise = 0, size = 0;
-	int negative = 0;
+	int negative = 0; //결과가 음수일 경우 1
 
 	res = malloc(sizeof(char) * arrayMaxSize);
 	if (!res) {
@@ -22,6 +23,15 @@ char* Sub(const char* buf1, const char* buf2)
 		exit(1);
 	}
 	memset(res, 0, arrayMaxSize);
+
+	if (isdigit(buf1[0]) && buf2[0] == '-') {
+		return Add(buf1, buf2 + 1); //buf2의 음수 부호 제거 후 Add함수 호출
+	}
+
+	if (buf1[0] == '-' && buf2[0] == '-') {
+
+		return Add(buf2+1, buf1); //인수가 둘 다 음수일 경우 뺄셈은 buf1 buf2의 위치를 변경하고 buf2의 음수 기호를 없앤 뒤 덧셈한다.
+	}
 
 	len1 = strlen(buf1) - 1;
 	len2 = strlen(buf2) - 1;
@@ -80,14 +90,25 @@ char* Add(const char* buf1, const char* buf2)
 	char* res;
 	int	len1 = 0, len2 = 0, raise = 0;
 	int size;
+	int flag = 0; //인수 2개 다 음수일 경우 1
 
-	res = (char*)malloc(sizeof(char) * arrayMaxSize * 2);
+	res = (char*)malloc(sizeof(char) * arrayMaxSize + 1);
 	if (!res)
 	{
 		puts("malloc failed!");
 		exit(1);
 	}
 	memset(res, 0, arrayMaxSize);
+
+	if (isdigit(buf1[0]) && buf2[0] == '-') {
+		return Sub(buf1, buf2 + 1); //buf2의 음수 부호 제거 후 전달
+	}
+
+	if (buf1[0] == '-' && buf2[0] == '-') {
+		memmove(buf1, buf1 + 1, strlen(buf1) + 1); //음수 부호 제거를 위해 한칸 당김
+		memmove(buf2, buf2 + 1, strlen(buf2) + 1); //음수 부호 제거를 위해 한칸 당김
+		flag = 1;
+	}
 
 	len1 = strlen(buf1) - 1;
 	len2 = strlen(buf2) - 1;
@@ -121,18 +142,30 @@ char* Add(const char* buf1, const char* buf2)
 	// 앞의 불필요한 0 제거
 	removeLeadingZeros(res);
 
+	if (flag == 1){ //인수 2개 모두 음수였으므로 연산 후 한칸 밀고 음수 부호 붙임
+		memmove(res + 1, res, strlen(res) + 1);
+		res[0] = '-';
+	}
 	return res;
 }
 
 int check_digit(const char* buf)
 {
-	while (*buf)
-	{
-		if (!isdigit(*buf++))
-			return 0;
+	// 첫 번째 문자가 '-'인 경우 이를 무시하고 이후 문자를 검사
+	if (*buf == '-') {
+		buf++;
 	}
+
+	// 남은 문자가 모두 숫자인지 검사
+	while (*buf) {
+		if (!isdigit(*buf++)) {
+			return 0;
+		}
+	}
+
 	return 1;
 }
+
 
 void removeLeadingZeros(char* str)
 {
